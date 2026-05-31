@@ -1,0 +1,41 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
+import { Badge, Card, EmptyState, ErrorState, LoadingState, PageHeader, formatDate, formatNumber } from "@/components/ui";
+import { AdminContactMessage, PaginationMeta, deleteAdminContact, getAdminContacts, updateAdminContactStatus } from "@/lib/admin-api";
+import { useUi } from "@/features/ui/ui-provider";
+
+type Filters = { search: string; status: string; category: string };
+const initialFilters: Filters = { search: "", status: "", category: "" };
+
+function tone(status: string) {
+  if (status === "resolved") return "success" as const;
+  if (status === "archived") return "danger" as const;
+  if (status === "reviewed") return "warning" as const;
+  return "brand" as const;
+}
+
+export default function ContactsPage() {
+  const [items, setItems] = useState<AdminContactMessage[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | undefined>();
+  const [filters, setFilters] = useState(initialFilters);
+  const [applied, setApplied] = useState(initialFilters);
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<AdminContactMessage | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const ui = useUi();
+
+  function load() { setLoading(true); getAdminContacts({ ...applied, page, per_page: 30 }).then((result) => { if (result.ok) { setItems(result.data.data); setMeta(result.data.meta); setError(null); } else setError(result.message); }).finally(() => setLoading(false)); }
+  useEffect(load, [applied, page]);
+  function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setPage(1); setApplied(filters); }
+  async function setStatus(contact: AdminContactMessage, status: string) { const note = ["resolved", "archived"].includes(status) ? await ui.prompt({ title: "Admin note", defaultValue: contact.admin_note ?? "", confirmLabel: status }) ?? undefined : undefined; const result = await updateAdminContactStatus(contact.id, status, note); if (result.ok) { ui.toast({ tone: "success", title: `Contact #${contact.id}: ${status}` }); setSelected(result.data.data); load(); } else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); } }
+  async function remove(contact: AdminContactMessage) { if (!await ui.confirm({ title: "Удалить обращение", message: `Удалить сообщение #${contact.id}: ${contact.subject}?`, confirmLabel: "Delete", danger: true })) return; const result = await deleteAdminContact(contact.id); if (result.ok) { ui.toast({ tone: "success", title: "Contact deleted" }); setSelected(null); load(); } else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); } }
+
+  return <section className="page"><PageHeader kicker="developer feedback" title="Contacts" description="Сообщения пользователей разработчикам: баги, идеи, фидбек, проблемы с контентом. Страница доступна пользователям только из footer." />
+    <Card><form className="filter-row" onSubmit={submit}><input className="input" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} placeholder="Поиск по теме / тексту / email" /><select className="select" value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}><option value="">Все статусы</option><option value="new">new</option><option value="reviewed">reviewed</option><option value="resolved">resolved</option><option value="archived">archived</option></select><select className="select" value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}><option value="">Все категории</option><option value="bug">bug</option><option value="idea">idea</option><option value="feedback">feedback</option><option value="content">content</option><option value="account">account</option><option value="other">other</option></select><button className="button secondary" type="submit">Фильтровать</button></form></Card>
+    {loading ? <LoadingState label="Загружаем обращения…" /> : null}{error ? <ErrorState message={error} /> : null}{!loading && !error && items.length === 0 ? <EmptyState title="Сообщений нет" description="Когда пользователи напишут через /contacts, обращения появятся здесь." /> : null}
+    {!loading && !error && items.length > 0 ? <div className="grid" style={{ gridTemplateColumns: "minmax(360px, 1.1fr) minmax(320px, .9fr)" }}><Card><div className="toolbar" style={{ marginBottom: 16 }}><h2 style={{ margin: 0 }}>Inbox</h2><span className="pill">{formatNumber(meta?.total)} messages</span></div><div className="table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>Status</th><th>Category</th><th>Subject</th><th>From</th><th>Date</th><th>Actions</th></tr></thead><tbody>{items.map((contact) => <tr key={contact.id}><td>#{contact.id}</td><td><Badge tone={tone(contact.status)}>{contact.status}</Badge></td><td>{contact.category}</td><td><button style={{ background: "transparent", color: "inherit", cursor: "pointer", textAlign: "left" }} onClick={() => setSelected(contact)} type="button"><strong>{contact.subject}</strong><br /><span className="muted">{contact.message.slice(0, 90)}{contact.message.length > 90 ? "…" : ""}</span></button></td><td>{contact.name ?? contact.user?.name ?? "anonymous"}<br /><span className="muted">{contact.email ?? contact.user?.email ?? ""}</span></td><td>{formatDate(contact.created_at)}</td><td><button className="button secondary" onClick={() => setSelected(contact)} type="button">Open</button></td></tr>)}</tbody></table></div><div className="toolbar" style={{ marginTop: 16 }}><button className="button secondary" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>← Назад</button><span className="muted">Страница {meta?.current_page ?? page} из {meta?.last_page ?? 1}</span><button className="button secondary" disabled={meta ? page >= meta.last_page : true} onClick={() => setPage((p) => p + 1)}>Вперёд →</button></div></Card>
+      <Card>{selected ? <div style={{ display: "grid", gap: 14 }}><div className="toolbar"><Badge tone={tone(selected.status)}>{selected.status}</Badge><span className="muted">#{selected.id}</span></div><h2 style={{ margin: 0 }}>{selected.subject}</h2><p className="muted">{selected.category} · {formatDate(selected.created_at)}</p><div className="pill" style={{ justifyContent: "space-between" }}><span>{selected.name ?? selected.user?.name ?? "anonymous"}</span><span>{selected.email ?? selected.user?.email ?? "no email"}</span></div><pre style={{ whiteSpace: "pre-wrap", lineHeight: 1.65, background: "rgba(255,255,255,.055)", border: "1px solid var(--border)", borderRadius: 18, padding: 16 }}>{selected.message}</pre>{selected.admin_note ? <p className="muted">Admin note: {selected.admin_note}</p> : null}<div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button className="button secondary" onClick={() => setStatus(selected, "reviewed")} type="button">Review</button><button className="button secondary" onClick={() => setStatus(selected, "resolved")} type="button">Resolve</button><button className="button secondary" onClick={() => setStatus(selected, "archived")} type="button">Archive</button><button className="button secondary" onClick={() => remove(selected)} type="button">Delete</button></div><details className="debug-panel"><summary>Technical context</summary><pre>{JSON.stringify({ ip: selected.ip_address, user_agent: selected.user_agent, admin: selected.admin, resolved_at: selected.resolved_at }, null, 2)}</pre></details></div> : <div className="state-card"><div><h3>Выбери сообщение</h3><p className="muted">Открой обращение из inbox, чтобы увидеть полный текст и действия.</p></div></div>}</Card></div> : null}
+  </section>;
+}

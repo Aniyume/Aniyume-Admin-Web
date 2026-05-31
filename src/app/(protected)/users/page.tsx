@@ -1,0 +1,79 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
+import { Badge, Card, EmptyState, ErrorState, LoadingState, PageHeader, formatDate, formatNumber } from "@/components/ui";
+import { AdminUser, PaginationMeta, banAdminUser, getAdminUsers, unbanAdminUser } from "@/lib/admin-api";
+import { useUi } from "@/features/ui/ui-provider";
+
+type Filters = { search: string; role: string; banned: string; premium: string; online: string };
+const initialFilters: Filters = { search: "", role: "", banned: "", premium: "", online: "" };
+
+export default function UsersPage() {
+  const [items, setItems] = useState<AdminUser[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | undefined>();
+  const [filters, setFilters] = useState(initialFilters);
+  const [applied, setApplied] = useState(initialFilters);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const ui = useUi();
+
+  function load() {
+    setLoading(true);
+    getAdminUsers({ ...applied, page, per_page: 20 })
+      .then((result) => {
+        if (result.ok) { setItems(result.data.data); setMeta(result.data.meta); setError(null); }
+        else setError(result.message);
+      })
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(load, [applied, page]);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setPage(1); setApplied(filters);
+  }
+
+  async function toggleBan(user: AdminUser) {
+    const reason = user.is_banned ? "" : await ui.prompt({ title: "Забанить пользователя", message: `Причина бана для ${user.email ?? user.name}?`, defaultValue: "Moderation action", confirmLabel: "Ban", danger: true }) ?? "";
+    if (!user.is_banned && !reason.trim()) return;
+    const result = user.is_banned ? await unbanAdminUser(user.id) : await banAdminUser(user.id, reason.trim());
+    if (result.ok) { const title = user.is_banned ? "Пользователь разблокирован" : "Пользователь заблокирован"; setNotice(title); ui.toast({ tone: "success", title }); load(); }
+    else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); }
+  }
+
+  return (
+    <section className="page">
+      <PageHeader kicker="identity & moderation" title="Users" description="Пользователи, роли, premium/online flags, баны и активность. Опасные действия проходят через подтверждение/причину." />
+      <Card>
+        <form className="filter-row" onSubmit={submit}>
+          <input className="input" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} placeholder="ID / name / email" />
+          <select className="select" value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value })}><option value="">Любая роль</option><option value="admin">admin</option><option value="moderator">moderator</option></select>
+          <select className="select" value={filters.banned} onChange={(e) => setFilters({ ...filters, banned: e.target.value })}><option value="">Ban status</option><option value="1">banned</option><option value="0">not banned</option></select>
+          <button className="button secondary" type="submit">Фильтровать</button>
+        </form>
+      </Card>
+      {notice ? <div className="pill" style={{ borderColor: "rgba(52,211,153,.35)", color: "var(--success)" }}>{notice}</div> : null}
+      {loading ? <LoadingState label="Загружаем пользователей…" /> : null}
+      {error ? <ErrorState message={error} /> : null}
+      {!loading && !error && items.length === 0 ? <EmptyState title="Пользователей не найдено" /> : null}
+      {!loading && !error && items.length > 0 ? <Card>
+        <div className="toolbar" style={{ marginBottom: 16 }}><h2 style={{ margin: 0 }}>Users table</h2><span className="pill">{formatNumber(meta?.total)} users</span></div>
+        <div className="table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>User</th><th>Roles</th><th>Status</th><th>Activity</th><th>Registered</th><th>Last login</th><th>Actions</th></tr></thead><tbody>
+          {items.map((user) => <tr key={user.id}>
+            <td>#{user.id}</td>
+            <td><Link href={`/users/${user.id}`}><strong>{user.name ?? "—"}</strong><br /><span className="muted">{user.email ?? "—"}</span></Link></td>
+            <td>{(user.roles ?? []).map((role) => <Badge key={role} tone={role === "admin" ? "brand" : "default"}>{role}</Badge>)}</td>
+            <td><div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{user.is_online ? <Badge tone="success">online</Badge> : <Badge>offline</Badge>}{user.is_premium ? <Badge tone="brand">premium</Badge> : null}{user.is_banned ? <Badge tone="danger">banned</Badge> : null}</div></td>
+            <td><span className="muted">comments</span> {user.comments_count ?? 0}<br /><span className="muted">ratings</span> {user.ratings_count ?? 0}</td>
+            <td>{formatDate(user.created_at)}</td><td>{formatDate(user.last_login_at)}</td>
+            <td><button className="button secondary" onClick={() => toggleBan(user)} type="button">{user.is_banned ? "Unban" : "Ban"}</button></td>
+          </tr>)}
+        </tbody></table></div>
+        <div className="toolbar" style={{ marginTop: 16 }}><button className="button secondary" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>← Назад</button><span className="muted">Страница {meta?.current_page ?? page} из {meta?.last_page ?? 1}</span><button className="button secondary" disabled={meta ? page >= meta.last_page : true} onClick={() => setPage((p) => p + 1)}>Вперёд →</button></div>
+      </Card> : null}
+    </section>
+  );
+}
