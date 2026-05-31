@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Badge, Card, EmptyState, ErrorState, LoadingState, PageHeader, StatCard, formatDate, formatNumber } from "@/components/ui";
-import { AdminAnime, AdminComment, AdminEpisode, AdminTag, approveAdminComment, deleteAdminAnime, deleteAdminAnimeImage, getAdminAnimeDetail, getAdminComments, getAdminEpisodes, getAdminTags, importEpisodesForAnime, rejectAdminComment, updateAdminAnime, uploadAdminAnimeImage } from "@/lib/admin-api";
+import { AdminAnime, AdminBannerCandidate, AdminComment, AdminEpisode, AdminTag, applyAdminAnimeBanner, approveAdminComment, deleteAdminAnime, deleteAdminAnimeImage, getAdminAnimeBannerCandidates, getAdminAnimeDetail, getAdminComments, getAdminEpisodes, getAdminTags, importEpisodesForAnime, lockAdminAnimeCover, rejectAdminComment, updateAdminAnime, uploadAdminAnimeImage } from "@/lib/admin-api";
 import { useUi } from "@/features/ui/ui-provider";
 
 type AnimeForm = {
@@ -44,6 +44,8 @@ export default function AnimeDetailPage() {
   const [tags, setTags] = useState<AdminTag[]>([]);
   const [episodes, setEpisodes] = useState<AdminEpisode[]>([]);
   const [comments, setComments] = useState<AdminComment[]>([]);
+  const [bannerCandidates, setBannerCandidates] = useState<AdminBannerCandidate[]>([]);
+  const [findingBanners, setFindingBanners] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<"poster" | "cover" | null>(null);
@@ -132,6 +134,31 @@ export default function AnimeDetailPage() {
     setUploading(null);
   }
 
+  async function findBanners() {
+    if (!animeId) return;
+    setFindingBanners(true);
+    const result = await getAdminAnimeBannerCandidates(animeId);
+    if (result.ok) { setBannerCandidates(result.data.data); ui.toast({ tone: "success", title: `Found ${result.data.data.length} banners` }); }
+    else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); }
+    setFindingBanners(false);
+  }
+
+  async function applyBanner(candidate: AdminBannerCandidate) {
+    if (!animeId || !anime) return;
+    const force = Boolean(anime.cover_locked) ? await ui.confirm({ title: "Cover locked", message: "Баннер locked. Применить candidate принудительно?", confirmLabel: "Force apply" }) : false;
+    if (anime.cover_locked && !force) return;
+    const result = await applyAdminAnimeBanner(animeId, candidate, force);
+    if (result.ok) { setAnime(result.data.data); setForm(toForm(result.data.data)); ui.toast({ tone: "success", title: "Banner applied" }); }
+    else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); }
+  }
+
+  async function toggleCoverLock() {
+    if (!animeId || !anime) return;
+    const result = await lockAdminAnimeCover(animeId, !anime.cover_locked);
+    if (result.ok) { setAnime(result.data.data); ui.toast({ tone: "success", title: result.data.data.cover_locked ? "Cover locked" : "Cover unlocked" }); }
+    else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); }
+  }
+
   if (loading) return <LoadingState label="Загружаем anime workspace…" />;
   if (error && !anime) return <ErrorState message={error} />;
   if (!anime || !form) return <EmptyState title="Anime не найдено" />;
@@ -149,7 +176,7 @@ export default function AnimeDetailPage() {
             <label className="button secondary" style={{ cursor: "pointer" }}>{uploading === "poster" ? "Uploading…" : "Upload poster"}<input accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => uploadImage("poster", event)} type="file" /></label>
             <button className="button secondary" disabled={!anime.poster_url || uploading === "poster"} onClick={() => removeImage("poster")} type="button">Remove poster</button>
           </div>
-          <Card><div style={{ display: "grid", gap: 12 }}><p className="kicker">cover / banner</p>{anime.cover_url ? <img alt="cover" style={{ width: "100%", maxHeight: 180, objectFit: "cover", borderRadius: 18, border: "1px solid var(--border)" }} src={anime.cover_url} /> : <p className="muted">Баннер пока не загружен.</p>}<div className="grid"><label className="button secondary" style={{ cursor: "pointer" }}>{uploading === "cover" ? "Uploading…" : "Upload cover"}<input accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => uploadImage("cover", event)} type="file" /></label><button className="button secondary" disabled={!anime.cover_url || uploading === "cover"} onClick={() => removeImage("cover")} type="button">Remove cover</button></div></div></Card>
+          <Card><div style={{ display: "grid", gap: 12 }}><div className="toolbar"><div><p className="kicker">cover / banner</p><span className="muted">{anime.cover_source ?? "no source"} · {anime.cover_locked ? "locked" : "unlocked"}</span></div><Badge tone={anime.cover_locked ? "warning" : "brand"}>{anime.cover_locked ? "locked" : "auto"}</Badge></div>{anime.cover_url ? <img alt="cover" style={{ width: "100%", maxHeight: 180, objectFit: "cover", borderRadius: 18, border: "1px solid var(--border)" }} src={anime.cover_url} /> : <p className="muted">Баннер пока не загружен.</p>}<div className="grid"><label className="button secondary" style={{ cursor: "pointer" }}>{uploading === "cover" ? "Uploading…" : "Upload cover"}<input accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => uploadImage("cover", event)} type="file" /></label><button className="button secondary" disabled={!anime.cover_url || uploading === "cover"} onClick={() => removeImage("cover")} type="button">Remove cover</button><button className="button secondary" onClick={toggleCoverLock} type="button">{anime.cover_locked ? "Unlock" : "Lock"}</button><button className="button" disabled={findingBanners} onClick={findBanners} type="button">{findingBanners ? "Finding…" : "Find better"}</button></div>{bannerCandidates.length > 0 ? <div style={{ display: "grid", gap: 10 }}>{bannerCandidates.map((candidate) => <div className="card" key={`${candidate.source}-${candidate.source_id}-${candidate.url}`}><div className="card-content" style={{ display: "grid", gap: 10 }}><img alt={candidate.title ?? "banner"} style={{ width: "100%", maxHeight: 140, objectFit: "cover", borderRadius: 14 }} src={candidate.url} /><div className="toolbar"><div><strong>{candidate.title}</strong><br /><span className="muted">{candidate.source} · score {candidate.score} · {candidate.year ?? "—"}</span></div><button className="button secondary" onClick={() => applyBanner(candidate)} type="button">Apply</button></div></div></div>)}</div> : null}</div></Card>
           <div className="grid">
             <StatCard label="Rating" value={`★ ${anime.rating ?? "—"}`} caption={`${formatNumber(anime.ratings_count)} ratings`} />
             <StatCard label="Episodes" value={formatNumber(anime.episodes_count ?? anime.number_of_episodes)} caption="Связанных серий" />

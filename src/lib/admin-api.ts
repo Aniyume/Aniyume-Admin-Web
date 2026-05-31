@@ -36,6 +36,9 @@ export type AdminAnime = {
   description?: string | null;
   poster_url?: string | null;
   cover_url?: string | null;
+  cover_source?: string | null;
+  cover_locked?: boolean;
+  cover_updated_at?: string | null;
   rating?: number | null;
   status?: string | null;
   type?: string | null;
@@ -187,6 +190,18 @@ export type AdminRatingStats = {
 
 export type AdminRatingsResponse = PaginatedResponse<AdminRating> & { stats: AdminRatingStats };
 
+export type AdminBannerCandidate = {
+  source: string;
+  source_id?: string | number | null;
+  url: string;
+  score: number;
+  title?: string | null;
+  year?: number | null;
+  format?: string | null;
+  episodes?: number | null;
+  color?: string | null;
+};
+
 export type AdminContactMessage = {
   id: number;
   name?: string | null;
@@ -298,10 +313,30 @@ export const uploadAdminAnimeImage = (animeId: number | string, kind: "poster" |
 };
 export const deleteAdminAnimeImage = (animeId: number | string, kind: "poster" | "cover") =>
   requestAdmin<ApiDataResponse<AdminAnime>>(`/api/v1/admin/anime/${animeId}/${kind}`, { method: "DELETE" });
+export const getAdminAnimeBannerCandidates = (animeId: number | string) =>
+  requestAdmin<ApiDataResponse<AdminBannerCandidate[]>>(`/api/v1/admin/anime/${animeId}/banner-candidates`);
+export const applyAdminAnimeBanner = (animeId: number | string, candidate: Pick<AdminBannerCandidate, "url" | "source">, force = false) =>
+  requestAdmin<ApiDataResponse<AdminAnime>>(`/api/v1/admin/anime/${animeId}/banner/apply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url: candidate.url, source: candidate.source, force }),
+  });
+export const lockAdminAnimeCover = (animeId: number | string, locked: boolean) =>
+  requestAdmin<ApiDataResponse<AdminAnime>>(`/api/v1/admin/anime/${animeId}/cover-lock`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ locked }),
+  });
 export const getAdminImportsDashboard = () =>
   requestAdmin<ApiDataResponse<AdminImportsDashboard>>("/api/v1/admin/imports/dashboard");
 export const getAdminImportLogs = (params?: Record<string, string | number | boolean | undefined | null>) =>
   requestAdmin<PaginatedResponse<AdminImportLog>>(`/api/v1/admin/imports/logs${toQueryString(params)}`);
+export const runAdminImport = (type: "initial" | "update") =>
+  requestAdmin<ApiDataResponse<AdminImportLog>>("/api/v1/admin/imports/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type }),
+  });
 export const getAdminUsers = (params?: Record<string, string | number | boolean | undefined | null>) =>
   requestAdmin<PaginatedResponse<AdminUser>>(`/api/v1/admin/users${toQueryString(params)}`);
 export const getAdminUserDetail = (userId: number | string) =>
