@@ -6,6 +6,18 @@ dist
 # env files — ignore all real env, allow example
 .env*
 !.env.example
+*.env.backup*
+*.backup.env*
+
+# local secrets and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+auth.json
+credentials.json
 
 # build artifacts
 *.tsbuildinfo

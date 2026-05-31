@@ -9,6 +9,14 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+*.env.backup*
+*.backup.env*
+*.pem
+*.key
+*.p12
+*.pfx
+auth.json
+credentials.json
 Dockerfile
 .dockerignore
 README.md
