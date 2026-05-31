@@ -327,6 +327,12 @@ export const lockAdminAnimeCover = (animeId: number | string, locked: boolean) =
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ locked }),
   });
+export const enrichAdminAnimeBanners = (payload?: { limit?: number; only_missing?: boolean; force?: boolean }) =>
+  requestAdmin<ApiDataResponse<{ message: string; limit: number }>>("/api/v1/admin/anime/banners/enrich", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ limit: 100, only_missing: true, force: false, ...(payload ?? {}) }),
+  });
 export const getAdminImportsDashboard = () =>
   requestAdmin<ApiDataResponse<AdminImportsDashboard>>("/api/v1/admin/imports/dashboard");
 export const getAdminImportLogs = (params?: Record<string, string | number | boolean | undefined | null>) =>
