@@ -1,6 +1,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL ?? "";
 
 let adminToken = "";
+let clerkTokenProvider: (() => Promise<string | null>) | null = null;
 
 export type AdminApiResult<T> =
   | { ok: true; data: T; status: number }
@@ -248,11 +249,17 @@ export function clearAdminToken() {
   adminToken = "";
 }
 
+export function setAdminClerkTokenProvider(provider: (() => Promise<string | null>) | null) {
+  clerkTokenProvider = provider;
+}
+
 async function requestAdmin<T>(path: string, init?: RequestInit): Promise<AdminApiResult<T>> {
   try {
     const headers = new Headers(init?.headers);
     headers.set("Accept", "application/json");
-    if (adminToken) headers.set("Authorization", `Bearer ${adminToken}`);
+    const clerkToken = clerkTokenProvider ? await clerkTokenProvider() : null;
+    const token = clerkToken || adminToken;
+    if (token) headers.set("Authorization", `Bearer ${token}`);
 
     const url = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
     const response = await fetch(url, {

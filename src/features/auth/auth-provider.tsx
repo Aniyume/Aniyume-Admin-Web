@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { clearAdminToken, getAdminMe, setAdminToken } from "@/lib/admin-api";
+import { useAuth as useClerkAuth } from "@clerk/nextjs";
+import { clearAdminToken, getAdminMe, setAdminClerkTokenProvider, setAdminToken } from "@/lib/admin-api";
 
 type AdminUser = {
   id?: string | number;
@@ -25,6 +26,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 const SESSION_TOKEN_STORAGE_KEY = "aniyume-admin-session-token";
+const CLERK_JWT_TEMPLATE = process.env.NEXT_PUBLIC_CLERK_JWT_TEMPLATE || undefined;
 
 function readSessionToken() {
   if (typeof window === "undefined") return "";
@@ -38,6 +40,7 @@ function writeSessionToken(token: string) {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { getToken, isSignedIn } = useClerkAuth();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [status, setStatus] = useState<AuthStatus>("idle");
   const [persistForTab, setPersistForTab] = useState(false);
@@ -58,6 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = tokenOverride ?? readSessionToken();
       if (token) setAdminToken(token);
 
+      setAdminClerkTokenProvider(isSignedIn ? () => getToken({ template: CLERK_JWT_TEMPLATE }) : null);
+
       setStatus("loading");
       const result = await getAdminMe();
 
@@ -76,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setStatus("authenticated");
       return { ok: true as const };
     },
-    [persistForTab],
+    [getToken, isSignedIn, persistForTab],
   );
 
   const value = useMemo(

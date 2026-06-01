@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import { UiProvider } from "@/features/ui/ui-provider";
@@ -15,9 +16,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru">
       <body className={inter.className}>
-        <UiProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </UiProvider>
+        <ClerkProvider>
+          <UiProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </UiProvider>
+        </ClerkProvider>
       </body>
     </html>
   );
