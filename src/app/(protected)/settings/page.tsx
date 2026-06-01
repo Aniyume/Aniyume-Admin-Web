@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Badge, Card, EmptyState, ErrorState, LoadingState, PageHeader, formatDate } from "@/components/ui";
-import { AdminDiagnostics, AdminSetting, getAdminDiagnostics, getAdminSettings, updateAdminSettings } from "@/lib/admin-api";
+import { AdminDiagnostics, AdminPlayerDiagnostics, AdminSetting, getAdminDiagnostics, getAdminPlayerDiagnostics, getAdminSettings, updateAdminSettings } from "@/lib/admin-api";
 import { useUi } from "@/features/ui/ui-provider";
 
 function stringifyValue(value: AdminSetting["value"]) {
@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<AdminSetting[]>([]);
   const [values, setValues] = useState<Record<string, string | boolean>>({});
   const [diagnostics, setDiagnostics] = useState<AdminDiagnostics | null>(null);
+  const [playerDiagnostics, setPlayerDiagnostics] = useState<AdminPlayerDiagnostics | null>(null);
   const [activeGroup, setActiveGroup] = useState("general");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -35,13 +36,14 @@ export default function SettingsPage() {
 
   function load() {
     setLoading(true);
-    Promise.all([getAdminSettings(), getAdminDiagnostics()]).then(([settingsResult, diagnosticsResult]) => {
+    Promise.all([getAdminSettings(), getAdminDiagnostics(), getAdminPlayerDiagnostics()]).then(([settingsResult, diagnosticsResult, playersResult]) => {
       if (settingsResult.ok) {
         setSettings(settingsResult.data.data);
         setValues(Object.fromEntries(settingsResult.data.data.map((setting) => [setting.key, setting.type === "boolean" ? Boolean(setting.value) : stringifyValue(setting.value)])));
         if (!settingsResult.data.data.some((setting) => setting.group === activeGroup)) setActiveGroup(settingsResult.data.data[0]?.group ?? "general");
       } else setError(settingsResult.message);
       if (diagnosticsResult.ok) setDiagnostics(diagnosticsResult.data.data);
+      if (playersResult.ok) setPlayerDiagnostics(playersResult.data.data);
     }).finally(() => setLoading(false));
   }
   useEffect(load, []);
@@ -71,5 +73,6 @@ export default function SettingsPage() {
       <Card><form className="form-grid" onSubmit={save}><div className="toolbar"><div><p className="kicker">{activeGroup}</p><h2 style={{ margin: 0 }}>Editable settings</h2></div><Badge tone={dirty.length ? "warning" : "success"}>{dirty.length} changed</Badge></div>{groupSettings.map((setting) => <div key={setting.key} style={{ border: "1px solid var(--border)", borderRadius: 18, padding: 14, background: "rgba(255,255,255,.035)" }}><div className="toolbar" style={{ marginBottom: 10 }}><div><strong>{setting.key}</strong><p className="muted" style={{ margin: "4px 0 0" }}>{setting.description ?? "—"}</p></div><div style={{ display: "flex", gap: 6 }}><Badge>{setting.type}</Badge>{setting.is_public ? <Badge tone="brand">public</Badge> : null}</div></div>{setting.type === "boolean" ? <label className="pill" style={{ justifyContent: "flex-start" }}><input checked={Boolean(values[setting.key])} onChange={(e) => setValues({ ...values, [setting.key]: e.target.checked })} type="checkbox" /> Enabled</label> : setting.type === "json" ? <textarea className="input" rows={6} value={String(values[setting.key] ?? "")} onChange={(e) => setValues({ ...values, [setting.key]: e.target.value })} /> : <input className="input" value={String(values[setting.key] ?? "")} onChange={(e) => setValues({ ...values, [setting.key]: e.target.value })} /> }<p className="muted" style={{ fontSize: 12 }}>Updated: {formatDate(setting.updated_at)}</p></div>)}<button className="button" disabled={saving || dirty.length === 0} type="submit">{saving ? "Saving…" : `Save ${dirty.length} changes`}</button></form></Card>
       <Card><p className="kicker">diagnostics</p><h2 style={{ marginTop: 0 }}>Environment health</h2>{diagnostics ? <div style={{ display: "grid", gap: 16 }}>{Object.entries(diagnostics).map(([group, entries]) => <div key={group}><h3 style={{ marginBottom: 8 }}>{group}</h3><div style={{ display: "grid", gap: 8 }}>{Object.entries(entries).map(([key, value]) => <div className="pill" key={key} style={{ justifyContent: "space-between", borderRadius: 14 }}><span>{key}</span><strong style={{ color: typeof value === "boolean" ? value ? "var(--success)" : "var(--danger)" : "var(--text)" }}>{String(value)}</strong></div>)}</div></div>)}</div> : <p className="muted">Diagnostics unavailable.</p>}</Card>
     </div>
+    {activeGroup === "players" && <Card><div className="toolbar"><div><p className="kicker">player preview</p><h2 style={{ margin: 0 }}>External players diagnostics</h2><p className="muted" style={{ margin: "4px 0 0" }}>Preview строится на anime {playerDiagnostics?.anime ? `#${playerDiagnostics.anime.id} · ${playerDiagnostics.anime.title}` : "не найдено"}.</p></div><button className="button secondary" onClick={load} type="button">↻ Check</button></div><div className="grid">{playerDiagnostics?.providers.map((provider) => <div key={provider.source} className="pill" style={{ display: "block", borderRadius: 18 }}><div className="toolbar"><strong>{provider.name}</strong><Badge tone={provider.enabled && provider.valid_preview ? "success" : provider.has_template ? "warning" : "danger"}>{provider.enabled ? "enabled" : "disabled"}</Badge></div><p className="muted" style={{ overflowWrap: "anywhere" }}>{provider.preview_url ?? "Нет preview URL — проверь template и включение провайдера"}</p></div>)}</div></Card>}
   </section>;
 }

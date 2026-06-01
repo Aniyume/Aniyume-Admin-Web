@@ -241,6 +241,11 @@ export type AdminDiagnostics = {
   health: Record<string, string | boolean | number | null>;
 };
 
+export type AdminPlayerDiagnostics = {
+  anime: { id: number; title: string; shikimori_id?: number | null } | null;
+  providers: Array<{ source: string; name: string; enabled: boolean; has_template: boolean; translator: string; preview_url?: string | null; valid_preview: boolean }>;
+};
+
 export function setAdminToken(token: string) {
   adminToken = token;
 }
@@ -396,10 +401,19 @@ export const updateAdminEpisode = (episodeId: number, payload: Partial<AdminEpis
   });
 export const deleteAdminEpisode = (episodeId: number) =>
   requestAdmin<null>(`/api/v1/admin/episodes/${episodeId}`, { method: "DELETE" });
-export const importEpisodesForAnime = (animeId: number) =>
-  requestAdmin<ApiDataResponse<{ message: string; anime_id: number }>>(`/api/v1/admin/episodes/import/${animeId}`, { method: "POST" });
-export const importAllEpisodes = () =>
-  requestAdmin<ApiDataResponse<{ message: string; queued_count: number }>>("/api/v1/admin/episodes/import-all", { method: "POST" });
+export type EpisodesImportOptions = { source?: string; only_missing?: boolean; update?: boolean; limit?: number; anime_ids?: number[] };
+export const importEpisodesForAnime = (animeId: number, options: EpisodesImportOptions = {}) =>
+  requestAdmin<ApiDataResponse<{ message: string; anime_id: number; source?: string }>>(`/api/v1/admin/episodes/import/${animeId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(options),
+  });
+export const importAllEpisodes = (options: EpisodesImportOptions = {}) =>
+  requestAdmin<ApiDataResponse<{ message: string; queued_count: number; source?: string }>>("/api/v1/admin/episodes/import-all", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(options),
+  });
 export const getAdminReports = (params?: Record<string, string | number | boolean | undefined | null>) =>
   requestAdmin<PaginatedResponse<AdminReport>>(`/api/v1/admin/reports${toQueryString(params)}`);
 export const updateAdminReportStatus = (reportId: number, status: string, resolutionNote?: string) =>
@@ -434,3 +448,5 @@ export const updateAdminSettings = (settings: Array<{ key: string; value: unknow
   });
 export const getAdminDiagnostics = () =>
   requestAdmin<ApiDataResponse<AdminDiagnostics>>("/api/v1/admin/settings/diagnostics");
+export const getAdminPlayerDiagnostics = (animeId?: number | string) =>
+  requestAdmin<ApiDataResponse<AdminPlayerDiagnostics>>(`/api/v1/admin/episodes/player-diagnostics${toQueryString({ anime_id: animeId })}`);
