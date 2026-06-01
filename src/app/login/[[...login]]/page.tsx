@@ -11,7 +11,7 @@ export default function LoginPage() {
             Вход через Clerk. Доступ к backend admin API дополнительно проверяется по Clerk JWT и allowlist/role на сервере.
           </p>
           <div style={{ display: "grid", justifyContent: "center", marginTop: 28 }}>
-            <SignIn routing="path" path="/login" fallbackRedirectUrl="/dashboard" signUpFallbackRedirectUrl="/dashboard" />
+            <SignIn routing="path" path="/login" fallbackRedirectUrl="/dashboard" signUpUrl="/sign-up" />
           </div>
         </div>
       </section>
