@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge, Card, EmptyState, ErrorState, LoadingState, PageHeader, formatDate, formatNumber } from "@/components/ui";
-import { AdminUser, PaginationMeta, banAdminUser, getAdminUsers, unbanAdminUser } from "@/lib/admin-api";
+import { AdminUser, PaginationMeta, banAdminUser, getAdminUsers, grantAdminPremiumByNickname, unbanAdminUser, updateAdminUserPremium } from "@/lib/admin-api";
 import { useUi } from "@/features/ui/ui-provider";
 
 type Filters = { search: string; role: string; banned: string; premium: string; online: string };
@@ -44,14 +44,32 @@ export default function UsersPage() {
     else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); }
   }
 
+  async function grantPremiumByNickname() {
+    const nickname = await ui.prompt({ title: "Выдать Premium", message: "Ник пользователя из Boosty", confirmLabel: "Выдать" }) ?? "";
+    if (!nickname.trim()) return;
+    const result = await grantAdminPremiumByNickname(nickname.trim());
+    if (result.ok) { const title = `Premium выдан: ${result.data.data.name ?? nickname}`; setNotice(title); ui.toast({ tone: "success", title }); load(); }
+    else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); }
+  }
+
+  async function togglePremium(user: AdminUser) {
+    const next = !user.is_premium;
+    const result = await updateAdminUserPremium(user.id, next);
+    if (result.ok) { const title = next ? "Premium выдан" : "Premium снят"; setNotice(title); ui.toast({ tone: "success", title }); load(); }
+    else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); }
+  }
+
   return (
     <section className="page">
       <PageHeader kicker="identity & moderation" title="Users" description="Пользователи, роли, premium/online flags, баны и активность. Опасные действия проходят через подтверждение/причину." />
+      <div className="toolbar" style={{ marginBottom: 16 }}><button className="button" type="button" onClick={grantPremiumByNickname}>Выдать Premium по нику</button></div>
       <Card>
         <form className="filter-row" onSubmit={submit}>
           <input className="input" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} placeholder="ID / name / email" />
           <select className="select" value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value })}><option value="">Любая роль</option><option value="admin">admin</option><option value="moderator">moderator</option></select>
           <select className="select" value={filters.banned} onChange={(e) => setFilters({ ...filters, banned: e.target.value })}><option value="">Ban status</option><option value="1">banned</option><option value="0">not banned</option></select>
+          <select className="select" value={filters.premium} onChange={(e) => setFilters({ ...filters, premium: e.target.value })}><option value="">Premium</option><option value="1">premium</option><option value="0">standard</option></select>
+          <select className="select" value={filters.online} onChange={(e) => setFilters({ ...filters, online: e.target.value })}><option value="">Online</option><option value="1">online</option><option value="0">offline</option></select>
           <button className="button secondary" type="submit">Фильтровать</button>
         </form>
       </Card>
@@ -69,7 +87,7 @@ export default function UsersPage() {
             <td><div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{user.is_online ? <Badge tone="success">online</Badge> : <Badge>offline</Badge>}{user.is_premium ? <Badge tone="brand">premium</Badge> : null}{user.is_banned ? <Badge tone="danger">banned</Badge> : null}</div></td>
             <td><span className="muted">comments</span> {user.comments_count ?? 0}<br /><span className="muted">ratings</span> {user.ratings_count ?? 0}</td>
             <td>{formatDate(user.created_at)}</td><td>{formatDate(user.last_login_at)}</td>
-            <td><button className="button secondary" onClick={() => toggleBan(user)} type="button">{user.is_banned ? "Unban" : "Ban"}</button></td>
+            <td><div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button className="button secondary" onClick={() => togglePremium(user)} type="button">{user.is_premium ? "Revoke Premium" : "Grant Premium"}</button><button className="button secondary" onClick={() => toggleBan(user)} type="button">{user.is_banned ? "Unban" : "Ban"}</button></div></td>
           </tr>)}
         </tbody></table></div>
         <div className="toolbar" style={{ marginTop: 16 }}><button className="button secondary" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>← Назад</button><span className="muted">Страница {meta?.current_page ?? page} из {meta?.last_page ?? 1}</span><button className="button secondary" disabled={meta ? page >= meta.last_page : true} onClick={() => setPage((p) => p + 1)}>Вперёд →</button></div>

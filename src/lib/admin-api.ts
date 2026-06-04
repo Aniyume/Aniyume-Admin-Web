@@ -24,6 +24,8 @@ export type PaginatedResponse<T> = {
 
 export type ApiDataResponse<T> = { data: T };
 
+export const adminApiUrl = (path: string) => (API_BASE_URL ? `${API_BASE_URL}${path}` : path);
+
 export type AdminTag = {
   id: number;
   name: string;
@@ -113,6 +115,11 @@ export type AdminComment = {
   comment: string;
   is_approved: boolean;
   status: "approved" | "rejected" | string;
+  likes_count?: number;
+  dislikes_count?: number;
+  admin_hearted?: boolean;
+  admin_hearted_at?: string | null;
+  admin_hearted_by?: number | null;
   user?: Pick<AdminUser, "id" | "name" | "email" | "avatar" | "is_banned"> | null;
   anime?: Pick<AdminAnime, "id" | "title" | "slug" | "poster_url"> | null;
   created_at?: string | null;
@@ -148,8 +155,10 @@ export type AdminEpisode = {
   duration?: number | null;
   thumbnail_url?: string | null;
   translator?: string | null;
+  translation_type?: string | null;
   quality?: string | null;
   source?: string | null;
+  priority?: number | null;
   anime?: Pick<AdminAnime, "id" | "title" | "slug" | "poster_url"> | null;
   created_at?: string | null;
   updated_at?: string | null;
@@ -211,6 +220,7 @@ export type AdminContactMessage = {
   subject: string;
   message: string;
   status: "new" | "reviewed" | "resolved" | "archived" | string;
+  photo?: { name?: string | null; mime?: string | null; size?: number | null; url?: string | null } | null;
   admin_note?: string | null;
   ip_address?: string | null;
   user_agent?: string | null;
@@ -367,12 +377,26 @@ export const banAdminUser = (userId: number, reason: string) =>
   });
 export const unbanAdminUser = (userId: number) =>
   requestAdmin<ApiDataResponse<AdminUser>>(`/api/v1/admin/users/${userId}/unban`, { method: "POST" });
+export const grantAdminPremiumByNickname = (nickname: string) =>
+  requestAdmin<ApiDataResponse<AdminUser>>("/api/v1/admin/users/premium/grant", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nickname }),
+  });
+export const updateAdminUserPremium = (userId: number, isPremium: boolean) =>
+  requestAdmin<ApiDataResponse<AdminUser>>(`/api/v1/admin/users/${userId}/premium`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ is_premium: isPremium }),
+  });
 export const getAdminComments = (params?: Record<string, string | number | boolean | undefined | null>) =>
   requestAdmin<PaginatedResponse<AdminComment>>(`/api/v1/admin/comments${toQueryString(params)}`);
 export const approveAdminComment = (commentId: number) =>
   requestAdmin<ApiDataResponse<AdminComment>>(`/api/v1/admin/comments/${commentId}/approve`, { method: "POST" });
 export const rejectAdminComment = (commentId: number) =>
   requestAdmin<ApiDataResponse<AdminComment>>(`/api/v1/admin/comments/${commentId}/reject`, { method: "POST" });
+export const toggleAdminCommentHeart = (commentId: number) =>
+  requestAdmin<ApiDataResponse<AdminComment>>(`/api/v1/admin/comments/${commentId}/heart`, { method: "POST" });
 export const getAdminAuditLogs = (params?: Record<string, string | number | boolean | undefined | null>) =>
   requestAdmin<PaginatedResponse<AdminAuditLog>>(`/api/v1/admin/audit-logs${toQueryString(params)}`);
 export const getAdminTags = (params?: Record<string, string | number | boolean | undefined | null>) =>
@@ -438,6 +462,23 @@ export const updateAdminContactStatus = (contactId: number, status: string, admi
   });
 export const deleteAdminContact = (contactId: number) =>
   requestAdmin<null>(`/api/v1/admin/contacts/${contactId}`, { method: "DELETE" });
+export async function getAdminContactPhotoObjectUrl(contactId: number): Promise<AdminApiResult<string>> {
+  try {
+    const headers = new Headers({ Accept: "image/*" });
+    const clerkToken = clerkTokenProvider ? await clerkTokenProvider() : null;
+    const token = clerkToken || adminToken;
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    const response = await fetch(adminApiUrl(`/api/v1/admin/contacts/${contactId}/photo`), {
+      headers,
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (!response.ok) return { ok: false, status: response.status, message: `Photo error ${response.status}` };
+    return { ok: true, status: response.status, data: URL.createObjectURL(await response.blob()) };
+  } catch (error) {
+    return { ok: false, message: error instanceof Error ? error.message : "Unknown photo error" };
+  }
+}
 export const getAdminSettings = (params?: Record<string, string | number | boolean | undefined | null>) =>
   requestAdmin<ApiDataResponse<AdminSetting[]>>(`/api/v1/admin/settings${toQueryString(params)}`);
 export const updateAdminSettings = (settings: Array<{ key: string; value: unknown }>) =>
