@@ -25,6 +25,20 @@ export type PaginatedResponse<T> = {
 export type ApiDataResponse<T> = { data: T };
 
 export const adminApiUrl = (path: string) => (API_BASE_URL ? `${API_BASE_URL}${path}` : path);
+export const adminStorageUrl = (value?: string | null) => {
+  if (!value) return null;
+  if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("//")) return value;
+
+  const path = value
+    .replace(/^\/+/, "")
+    .replace(/^api-storage\//, "")
+    .replace(/^storage\//, "");
+
+  if (!API_BASE_URL) return `/api-storage/${path}`;
+
+  const origin = new URL(API_BASE_URL, typeof window === "undefined" ? "http://localhost" : window.location.origin).origin;
+  return `${origin}/storage/${path}`;
+};
 
 export type AdminTag = {
   id: number;
@@ -95,6 +109,8 @@ export type AdminUser = {
   name?: string | null;
   email?: string | null;
   avatar?: string | null;
+  custom_status?: string | null;
+  selected_profile_frame?: string | null;
   roles?: string[];
   is_admin?: boolean;
   is_online?: boolean;
@@ -102,6 +118,7 @@ export type AdminUser = {
   is_active?: boolean;
   is_banned?: boolean;
   ban_reason?: string | null;
+  ban_expires_at?: string | null;
   last_login_at?: string | null;
   comments_count?: number | null;
   ratings_count?: number | null;
@@ -369,11 +386,11 @@ export const getAdminUsers = (params?: Record<string, string | number | boolean 
   requestAdmin<PaginatedResponse<AdminUser>>(`/api/v1/admin/users${toQueryString(params)}`);
 export const getAdminUserDetail = (userId: number | string) =>
   requestAdmin<ApiDataResponse<AdminUser>>(`/api/v1/admin/users/${userId}`);
-export const banAdminUser = (userId: number, reason: string) =>
+export const banAdminUser = (userId: number, reason: string, expiresAt?: string | null) =>
   requestAdmin<ApiDataResponse<AdminUser>>(`/api/v1/admin/users/${userId}/ban`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reason }),
+    body: JSON.stringify({ reason, expires_at: expiresAt || null }),
   });
 export const unbanAdminUser = (userId: number) =>
   requestAdmin<ApiDataResponse<AdminUser>>(`/api/v1/admin/users/${userId}/unban`, { method: "POST" });
@@ -389,6 +406,26 @@ export const updateAdminUserPremium = (userId: number, isPremium: boolean) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ is_premium: isPremium }),
   });
+export type AdminUserProfileUpdatePayload = {
+  name?: string;
+  custom_status?: string | null;
+  selected_profile_frame?: string | null;
+};
+export const updateAdminUserProfile = (userId: number, payload: AdminUserProfileUpdatePayload) =>
+  requestAdmin<ApiDataResponse<AdminUser>>(`/api/v1/admin/users/${userId}/profile`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+export const uploadAdminUserAvatar = (userId: number, file: File) => {
+  const body = new FormData();
+  body.set("avatar", file);
+  return requestAdmin<ApiDataResponse<AdminUser>>(`/api/v1/admin/users/${userId}/avatar`, { method: "POST", body });
+};
+export const deleteAdminUserAvatar = (userId: number) =>
+  requestAdmin<ApiDataResponse<AdminUser>>(`/api/v1/admin/users/${userId}/avatar`, { method: "DELETE" });
+export const deleteAdminUser = (userId: number) =>
+  requestAdmin<null>(`/api/v1/admin/users/${userId}`, { method: "DELETE" });
 export const getAdminComments = (params?: Record<string, string | number | boolean | undefined | null>) =>
   requestAdmin<PaginatedResponse<AdminComment>>(`/api/v1/admin/comments${toQueryString(params)}`);
 export const approveAdminComment = (commentId: number) =>
