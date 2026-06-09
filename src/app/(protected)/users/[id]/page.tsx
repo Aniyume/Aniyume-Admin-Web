@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Badge, Card, EmptyState, ErrorState, LoadingState, PageHeader, StatCard, formatDate, formatNumber } from "@/components/ui";
-import { AdminComment, AdminReport, AdminUser, adminStorageUrl, banAdminUser, deleteAdminUser, deleteAdminUserAvatar, getAdminComments, getAdminReports, getAdminUserDetail, unbanAdminUser, updateAdminUserPremium, updateAdminUserProfile, uploadAdminUserAvatar } from "@/lib/admin-api";
+import { AdminComment, AdminReport, AdminUser, adminStorageUrl, banAdminUser, deleteAdminUser, deleteAdminUserAvatar, getAdminComments, getAdminReports, getAdminUserDetail, unbanAdminUser, updateAdminUserFrameAccess, updateAdminUserPremium, updateAdminUserProfile, uploadAdminUserAvatar } from "@/lib/admin-api";
 import { useUi } from "@/features/ui/ui-provider";
 
 const PROFILE_FRAME_OPTIONS = [
@@ -56,6 +56,7 @@ export default function UserDetailPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingAvatar, setSavingAvatar] = useState(false);
   const [savingPremium, setSavingPremium] = useState(false);
+  const [savingFrameKey, setSavingFrameKey] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +104,6 @@ export default function UserDetailPage() {
     const result = await updateAdminUserProfile(user.id, {
       name: profileForm.name.trim(),
       custom_status: profileForm.custom_status.trim() || null,
-      selected_profile_frame: profileForm.selected_profile_frame || "none",
     });
     setSavingProfile(false);
     if (result.ok) {
@@ -161,6 +161,20 @@ export default function UserDetailPage() {
       setUser(result.data.data);
       ui.toast({ tone: "success", title: user.is_premium ? "Premium снят" : "Premium выдан" });
       load();
+    } else {
+      setError(result.message);
+      ui.toast({ tone: "error", title: "Error", message: result.message });
+    }
+  }
+
+  async function setFrameAccess(frameKey: string, enabled: boolean) {
+    if (!user) return;
+    setSavingFrameKey(frameKey);
+    const result = await updateAdminUserFrameAccess(user.id, frameKey, enabled);
+    setSavingFrameKey(null);
+    if (result.ok) {
+      setUser(result.data.data);
+      ui.toast({ tone: "success", title: enabled ? "Рамка выдана" : "Рамка отозвана" });
     } else {
       setError(result.message);
       ui.toast({ tone: "error", title: "Error", message: result.message });
@@ -227,13 +241,30 @@ export default function UserDetailPage() {
         <form className="form-grid" onSubmit={saveProfile}>
           <label><span className="muted">Name</span><input className="input" value={profileForm.name} onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })} /></label>
           <label><span className="muted">Status</span><input className="input" value={profileForm.custom_status} onChange={(event) => setProfileForm({ ...profileForm, custom_status: event.target.value })} placeholder="Custom status" /></label>
-          <label><span className="muted">Frame</span><select className="select" value={profileForm.selected_profile_frame} onChange={(event) => setProfileForm({ ...profileForm, selected_profile_frame: event.target.value })}>{PROFILE_FRAME_OPTIONS.map((frame) => <option key={frame.key} value={frame.key}>{frame.label}</option>)}</select></label>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button className="button secondary" type="button" onClick={() => clearProfileField("custom_status")} disabled={savingProfile || !user.custom_status}>Убрать статус</button>
             <button className="button secondary" type="button" onClick={() => clearProfileField("selected_profile_frame")} disabled={savingProfile || !user.selected_profile_frame || user.selected_profile_frame === "none"}>Убрать рамку</button>
           </div>
           <button className="button" type="submit" disabled={savingProfile || !profileForm.name.trim()}>{savingProfile ? "Saving..." : "Save profile fields"}</button>
         </form>
+      </div>
+    </Card>
+    <Card>
+      <div className="toolbar" style={{ marginBottom: 16 }}>
+        <div><p className="kicker">profile frame access</p><h2 style={{ margin: 0 }}>Выдача рамок</h2></div>
+        <Badge tone="brand">Надета: {user.selected_profile_frame || "none"}</Badge>
+      </div>
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+        {PROFILE_FRAME_OPTIONS.filter((frame) => frame.key !== "none").map((frame) => {
+          const enabled = user.admin_granted_profile_frames?.includes(frame.key) ?? false;
+          return <div key={frame.key} style={{ display: "grid", gap: 10, padding: 12, border: "1px solid rgba(255,255,255,.1)", borderRadius: 12 }}>
+            <strong>{frame.label}</strong>
+            <div style={{ display: "flex", gap: 14 }}>
+              <label><input type="radio" name={`frame-${frame.key}`} checked={enabled} onChange={() => setFrameAccess(frame.key, true)} disabled={savingFrameKey === frame.key} /> Вкл</label>
+              <label><input type="radio" name={`frame-${frame.key}`} checked={!enabled} onChange={() => setFrameAccess(frame.key, false)} disabled={savingFrameKey === frame.key} /> Выкл</label>
+            </div>
+          </div>;
+        })}
       </div>
     </Card>
     <div className="grid" style={{ gridTemplateColumns: "minmax(300px, .8fr) minmax(320px, 1.2fr)" }}><Card><div style={{ display: "grid", gap: 14 }}><p className="kicker">identity</p><h2 style={{ margin: 0 }}>{user.name ?? "—"}</h2><p className="muted">{user.email ?? "—"}</p><div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{(user.roles ?? []).map((role) => <Badge key={role} tone={role === "admin" ? "brand" : "default"}>{role}</Badge>)}{user.is_premium ? <Badge tone="brand">premium</Badge> : null}{user.is_online ? <Badge tone="success">online</Badge> : <Badge>offline</Badge>}{user.is_banned ? <Badge tone="danger">banned · {formatBanUntil(user.ban_expires_at)}</Badge> : null}</div><p><span className="muted">Registered:</span> {formatDate(user.created_at)}</p><p><span className="muted">Last login:</span> {formatDate(user.last_login_at)}</p>{user.ban_reason ? <p className="error">Ban reason: {user.ban_reason}</p> : null}<div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button className="button secondary" onClick={togglePremium} type="button" disabled={savingPremium}>{savingPremium ? "..." : user.is_premium ? "Снять premium" : "Выдать premium"}</button><button className="button secondary" onClick={toggleBan} type="button">{user.is_banned ? "Unban user" : "Ban user"}</button><button className="button secondary" onClick={removeUser} type="button" disabled={deletingUser} style={{ borderColor: "rgba(251,113,133,.45)", color: "var(--danger)" }}>{deletingUser ? "Удаление..." : "Удалить пользователя"}</button></div></div></Card>

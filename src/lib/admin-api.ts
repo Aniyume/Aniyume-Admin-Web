@@ -111,6 +111,7 @@ export type AdminUser = {
   avatar?: string | null;
   custom_status?: string | null;
   selected_profile_frame?: string | null;
+  admin_granted_profile_frames?: string[];
   roles?: string[];
   is_admin?: boolean;
   is_online?: boolean;
@@ -416,6 +417,12 @@ export const updateAdminUserProfile = (userId: number, payload: AdminUserProfile
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+  });
+export const updateAdminUserFrameAccess = (userId: number, frameKey: string, enabled: boolean) =>
+  requestAdmin<ApiDataResponse<AdminUser>>(`/api/v1/admin/users/${userId}/frames/${encodeURIComponent(frameKey)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled }),
   });
 export const uploadAdminUserAvatar = (userId: number, file: File) => {
   const body = new FormData();
