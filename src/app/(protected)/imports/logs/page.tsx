@@ -27,16 +27,16 @@ export default function ImportLogsPage() {
 
   return (
     <section className="page">
-      <PageHeader kicker="observability" title="Import logs" description="Логи импорта с фильтрацией по статусу и пагинацией." />
+      <PageHeader kicker="история загрузок" title="Логи импорта" description="История импорта с фильтрацией по статусу и страницами." />
       <Card>
         <div className="toolbar">
           <select className="select" style={{ maxWidth: 240 }} value={status} onChange={(e) => { setPage(1); setStatus(e.target.value); }}>
-            <option value="">Все статусы</option><option value="running">running</option><option value="completed">completed</option><option value="failed">failed</option>
+            <option value="">Все статусы</option><option value="running">Выполняется</option><option value="completed">Завершено</option><option value="failed">Ошибка</option>
           </select>
           <span className="pill">{formatNumber(meta?.total)} логов</span>
         </div>
       </Card>
-      {loading ? <LoadingState label="Загружаем import logs…" /> : null}
+      {loading ? <LoadingState label="Загружаем логи импорта…" /> : null}
       {error ? <ErrorState message={error} /> : null}
       {!loading && !error && items.length === 0 ? <EmptyState title="Логов нет" /> : null}
       {!loading && !error && items.length > 0 ? (

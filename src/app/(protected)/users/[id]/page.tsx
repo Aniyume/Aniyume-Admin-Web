@@ -8,8 +8,8 @@ import { AdminComment, AdminReport, AdminUser, adminStorageUrl, banAdminUser, de
 import { useUi } from "@/features/ui/ui-provider";
 
 const PROFILE_FRAME_OPTIONS = [
-  { key: "none", label: "No frame" },
-  { key: "ramka1000people", label: "First 1000" },
+  { key: "none", label: "Без рамки" },
+  { key: "ramka1000people", label: "Первые 1000" },
   { key: "ramka1-10lvl", label: "Level 1-10" },
   { key: "ramka11-20lvl", label: "Level 11-20" },
   { key: "ramka21-30lvl", label: "Level 21-30" },
@@ -17,10 +17,10 @@ const PROFILE_FRAME_OPTIONS = [
   { key: "ramka41-50lvl", label: "Level 41-50" },
   { key: "ramka51-60lvl", label: "Level 51-60" },
   { key: "ramka61-70lvl", label: "Level 61-70" },
-  { key: "ramka67", label: "Secret 67" },
-  { key: "ramka+5friend", label: "5 friends" },
-  { key: "ramka+10friend", label: "10 friends" },
-  { key: "ramka+25friend", label: "25 friends" },
+  { key: "ramka67", label: "Секретная 67" },
+  { key: "ramka+5friend", label: "5 друзей" },
+  { key: "ramka+10friend", label: "10 друзей" },
+  { key: "ramka+25friend", label: "25 друзей" },
   { key: "ramkaShark", label: "Shark" },
   { key: "ramkaUborka", label: "Uborka" },
 ];
@@ -108,7 +108,7 @@ export default function UserDetailPage() {
     setSavingProfile(false);
     if (result.ok) {
       setUser(result.data.data);
-      ui.toast({ tone: "success", title: "Profile updated" });
+      ui.toast({ tone: "success", title: "Профиль обновлён" });
       load();
     } else {
       setError(result.message);
@@ -128,7 +128,7 @@ export default function UserDetailPage() {
     if (result.ok) {
       setAvatarFile(null);
       setUser(result.data.data);
-      ui.toast({ tone: "success", title: "Avatar updated" });
+      ui.toast({ tone: "success", title: "Аватар обновлён" });
       load();
     } else {
       setError(result.message);
@@ -144,7 +144,7 @@ export default function UserDetailPage() {
     if (result.ok) {
       setAvatarFile(null);
       setUser(result.data.data);
-      ui.toast({ tone: "success", title: "Avatar removed" });
+      ui.toast({ tone: "success", title: "Аватар удалён" });
       load();
     } else {
       setError(result.message);
@@ -221,12 +221,12 @@ export default function UserDetailPage() {
   if (error && !user) return <ErrorState message={error} />;
   if (!user) return <EmptyState title="Пользователь не найден" />;
 
-  return <section className="page"><PageHeader kicker="user dossier" title={user.name ?? `User #${user.id}`} description={`${user.email ?? "no email"} · user profile, moderation context, comments and reports.`} actions={<Link className="button secondary" href="/users">← Users</Link>} />
+  return <section className="page"><PageHeader kicker="карточка пользователя" title={user.name ?? `Пользователь #${user.id}`} description={`${user.email ?? "email не указан"} · профиль, модерация, комментарии и жалобы.`} actions={<Link className="button secondary" href="/users">← Пользователи</Link>} />
     {error ? <div className="pill" style={{ borderColor: "rgba(251,113,133,.35)", color: "var(--danger)" }}>{error}</div> : null}
-    <div className="grid"><StatCard label="Comments" value={formatNumber(user.comments_count)} caption="Оставленные комментарии" /><StatCard label="Ratings" value={formatNumber(user.ratings_count)} caption="Оценки anime" /><StatCard label="Favorites" value={formatNumber(user.favorites_count)} caption="Избранное" /><StatCard label="Status" value={user.is_banned ? "Banned" : user.is_online ? "Online" : "Offline"} caption={user.is_premium ? "Premium account" : "Standard account"} /></div>
+    <div className="grid"><StatCard label="Комментарии" value={formatNumber(user.comments_count)} caption="Оставленные комментарии" /><StatCard label="Оценки" value={formatNumber(user.ratings_count)} caption="Оценки аниме" /><StatCard label="Избранное" value={formatNumber(user.favorites_count)} caption="Добавлено в избранное" /><StatCard label="Статус" value={user.is_banned ? "Заблокирован" : user.is_online ? "Онлайн" : "Офлайн"} caption={user.is_premium ? "Premium-аккаунт" : "Стандартный аккаунт"} /></div>
     <Card>
       <div className="toolbar" style={{ marginBottom: 16 }}>
-        <div><p className="kicker">quick profile access</p><h2 style={{ margin: 0 }}>Name, status, frame, avatar</h2></div>
+        <div><p className="kicker">профиль пользователя</p><h2 style={{ margin: 0 }}>Имя, статус, рамка и аватар</h2></div>
         <Badge tone="brand">{profileForm.selected_profile_frame || "none"}</Badge>
       </div>
       <div className="grid" style={{ gridTemplateColumns: "140px minmax(280px, 1fr)" }}>
@@ -235,23 +235,23 @@ export default function UserDetailPage() {
             {user.avatar ? <img src={adminStorageUrl(user.avatar) ?? ""} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ width: "100%", height: "100%", display: "grid", placeItems: "center", fontSize: 34, fontWeight: 800 }}>{(user.name ?? "?")[0]?.toUpperCase()}</div>}
           </div>
           <input className="input" type="file" accept="image/*" onChange={selectAvatar} />
-          <button className="button secondary" type="button" onClick={saveAvatar} disabled={!avatarFile || savingAvatar}>{savingAvatar ? "Saving..." : "Upload avatar"}</button>
-          <button className="button secondary" type="button" onClick={removeAvatar} disabled={savingAvatar || !user.avatar}>Remove avatar</button>
+          <button className="button secondary" type="button" onClick={saveAvatar} disabled={!avatarFile || savingAvatar}>{savingAvatar ? "Сохраняем…" : "Загрузить аватар"}</button>
+          <button className="button secondary" type="button" onClick={removeAvatar} disabled={savingAvatar || !user.avatar}>Удалить аватар</button>
         </div>
         <form className="form-grid" onSubmit={saveProfile}>
-          <label><span className="muted">Name</span><input className="input" value={profileForm.name} onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })} /></label>
-          <label><span className="muted">Status</span><input className="input" value={profileForm.custom_status} onChange={(event) => setProfileForm({ ...profileForm, custom_status: event.target.value })} placeholder="Custom status" /></label>
+          <label><span className="muted">Имя</span><input className="input" value={profileForm.name} onChange={(event) => setProfileForm({ ...profileForm, name: event.target.value })} /></label>
+          <label><span className="muted">Статус</span><input className="input" value={profileForm.custom_status} onChange={(event) => setProfileForm({ ...profileForm, custom_status: event.target.value })} placeholder="Статус пользователя" /></label>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button className="button secondary" type="button" onClick={() => clearProfileField("custom_status")} disabled={savingProfile || !user.custom_status}>Убрать статус</button>
             <button className="button secondary" type="button" onClick={() => clearProfileField("selected_profile_frame")} disabled={savingProfile || !user.selected_profile_frame || user.selected_profile_frame === "none"}>Убрать рамку</button>
           </div>
-          <button className="button" type="submit" disabled={savingProfile || !profileForm.name.trim()}>{savingProfile ? "Saving..." : "Save profile fields"}</button>
+          <button className="button" type="submit" disabled={savingProfile || !profileForm.name.trim()}>{savingProfile ? "Сохраняем…" : "Сохранить профиль"}</button>
         </form>
       </div>
     </Card>
     <Card>
       <div className="toolbar" style={{ marginBottom: 16 }}>
-        <div><p className="kicker">profile frame access</p><h2 style={{ margin: 0 }}>Выдача рамок</h2></div>
+        <div><p className="kicker">доступ к рамкам</p><h2 style={{ margin: 0 }}>Выдача рамок</h2></div>
         <Badge tone="brand">Надета: {user.selected_profile_frame || "none"}</Badge>
       </div>
       <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>

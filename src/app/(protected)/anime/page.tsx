@@ -45,26 +45,26 @@ export default function AnimePage() {
   return (
     <section className="page">
       <PageHeader
-        kicker="content management"
-        title="Anime"
-        description="Каталог тайтлов с poster preview, фильтрами, сортировкой и foundation под bulk operations, drawer edit, comments/episodes tabs."
-        actions={<button className="button" type="button">+ Создать anime</button>}
+        kicker="управление контентом"
+        title="Аниме"
+        description="Каталог тайтлов с фильтрами, сортировкой и быстрым переходом к редактированию."
+        actions={<button className="button" type="button">+ Добавить аниме</button>}
       />
 
       <Card>
         <form className="filter-row" onSubmit={submit}>
-          <input className="input" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} placeholder="Поиск по title / slug / ID" />
+          <input className="input" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} placeholder="Поиск по названию, адресу или ID" />
           <select className="select" value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
-            <option value="">Все статусы</option><option value="planned">planned</option><option value="ongoing">ongoing</option><option value="finished">finished</option><option value="paused">paused</option>
+            <option value="">Все статусы</option><option value="planned">Запланировано</option><option value="ongoing">Выходит</option><option value="finished">Завершено</option><option value="paused">Приостановлено</option>
           </select>
           <select className="select" value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}>
-            <option value="">Все типы</option><option value="tv">tv</option><option value="movie">movie</option><option value="ova">ova</option><option value="ona">ona</option>
+            <option value="">Все типы</option><option value="tv">Сериал</option><option value="movie">Фильм</option><option value="ova">OVA</option><option value="ona">ONA</option>
           </select>
           <button className="button secondary" type="submit">Применить</button>
         </form>
       </Card>
 
-      {loading ? <LoadingState label="Загружаем anime catalog…" /> : null}
+      {loading ? <LoadingState label="Загружаем каталог аниме…" /> : null}
       {error ? <ErrorState message={error} /> : null}
       {!loading && !error && items.length === 0 ? <EmptyState title="Ничего не найдено" description="Попробуй изменить фильтры или поисковый запрос." /> : null}
 
@@ -72,8 +72,8 @@ export default function AnimePage() {
         <Card>
           <div className="toolbar" style={{ marginBottom: 16 }}>
             <div>
-              <p className="kicker">database table</p>
-              <h2 style={{ margin: 0 }}>Anime list</h2>
+              <p className="kicker">каталог</p>
+              <h2 style={{ margin: 0 }}>Список аниме</h2>
             </div>
             <div className="pill">{formatNumber(meta?.total)} записей</div>
           </div>

@@ -88,6 +88,8 @@ pre {
 .page {
   display: grid;
   gap: 24px;
+  width: 100%;
+  min-width: 0;
 }
 
 .page-header {
@@ -145,6 +147,7 @@ pre {
 .card-content {
   position: relative;
   padding: 22px;
+  min-width: 0;
 }
 
 .grid {
@@ -199,6 +202,25 @@ pre {
   transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 
+.select,
+select.input {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 44px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--brand-main) 50%),
+    linear-gradient(135deg, var(--brand-main) 50%, transparent 50%);
+  background-position: calc(100% - 19px) calc(50% - 2px), calc(100% - 14px) calc(50% - 2px);
+  background-repeat: no-repeat;
+  background-size: 5px 5px, 5px 5px;
+}
+
+.select:hover,
+select.input:hover {
+  border-color: var(--border-strong);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
 .input:focus,
 .select:focus {
   border-color: var(--brand-accent);
@@ -208,6 +230,12 @@ pre {
 
 .select option {
   background: #111111;
+  color: var(--text);
+}
+
+select.input option {
+  background: #111111;
+  color: var(--text);
 }
 
 .admin-shell {
@@ -323,6 +351,7 @@ pre {
 .admin-main {
   min-width: 0;
   padding: 22px;
+  overflow: hidden;
 }
 
 .admin-topbar {
@@ -444,6 +473,8 @@ pre {
 }
 
 .table-wrap {
+  width: 100%;
+  max-width: 100%;
   overflow: auto;
   border: 1px solid var(--border);
   border-radius: 22px;
@@ -679,6 +710,19 @@ pre {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.split-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.section-title {
+  margin: 0;
+  font-size: clamp(20px, 3vw, 28px);
+  letter-spacing: -0.035em;
+}
+
 @media (max-width: 680px) {
   .form-grid.two {
     grid-template-columns: 1fr;
@@ -695,32 +739,80 @@ pre {
   }
 
   .admin-sidebar {
-    position: relative;
+    position: sticky;
+    z-index: 30;
     height: auto;
+    padding: 10px 14px;
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
 
+  .admin-logo {
+    display: none;
+  }
+
   .admin-nav {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    overflow: visible;
+    display: flex;
+    gap: 6px;
+    margin-top: 0;
+    overflow-x: auto;
+    padding: 0 0 4px;
+    scrollbar-width: none;
+  }
+
+  .admin-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-nav-item {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 8px 11px;
+    white-space: nowrap;
+  }
+
+  .admin-nav-item:hover {
+    transform: none;
+  }
+
+  .admin-nav-section {
+    display: none;
   }
 
   .admin-user-card {
-    margin-top: 16px;
+    display: none;
+  }
+
+  .split-layout {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 760px) {
+  body {
+    background: radial-gradient(circle at 30% 0%, rgba(46, 196, 182, 0.12), transparent 22rem), var(--admin-bg);
+  }
+
+  .admin-sidebar {
+    top: 0;
+    padding: 8px 10px;
+  }
+
+  .admin-nav-icon {
+    width: auto;
+  }
+
   .admin-main {
-    padding: 16px;
+    padding: 14px;
   }
 
   .admin-topbar {
-    align-items: stretch;
-    flex-direction: column;
-    margin: -16px -16px 18px;
-    padding: 14px 16px;
+    margin: -14px -14px 16px;
+    padding: 10px 14px;
+  }
+
+  .topbar-actions {
+    display: none;
   }
 
   .page-header {
@@ -730,5 +822,123 @@ pre {
 
   .filter-row {
     grid-template-columns: 1fr;
+  }
+
+  .page {
+    gap: 16px;
+  }
+
+  .page-title {
+    font-size: clamp(30px, 13vw, 46px);
+    line-height: .94;
+  }
+
+  .page-subtitle {
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .page-header > div:last-child,
+  .page-header > div:last-child > div {
+    width: 100%;
+  }
+
+  .page-header .button {
+    flex: 1 1 auto;
+  }
+
+  .card {
+    border-radius: 18px;
+  }
+
+  .card-content {
+    padding: 16px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .toolbar {
+    align-items: stretch;
+  }
+
+  .toolbar > .input,
+  .toolbar > label {
+    width: 100%;
+    max-width: none !important;
+  }
+
+  .button {
+    min-height: 44px;
+  }
+
+  .table-wrap {
+    margin-inline: -16px;
+    width: calc(100% + 32px);
+    max-width: calc(100% + 32px);
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .admin-table {
+    min-width: 720px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 12px;
+  }
+
+  .dialog-backdrop,
+  .drawer-panel {
+    padding: 14px;
+  }
+
+  .dialog-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .state-card {
+    min-height: 180px;
+    padding: 20px 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-main {
+    padding: 10px;
+  }
+
+  .admin-topbar {
+    margin: -10px -10px 14px;
+    padding: 8px 10px;
+  }
+
+  .admin-sidebar {
+    padding-inline: 8px;
+  }
+
+  .admin-nav-item {
+    font-size: 13px;
+  }
+
+  .card-content {
+    padding: 14px;
+  }
+
+  .table-wrap {
+    margin-inline: -14px;
+    width: calc(100% + 28px);
+    max-width: calc(100% + 28px);
+  }
+
+  .pill {
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
 }

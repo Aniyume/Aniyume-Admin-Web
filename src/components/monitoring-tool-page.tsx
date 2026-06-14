@@ -53,10 +53,10 @@ export function MonitoringToolPage({
   }, [checkHealth]);
 
   const statusLabel = {
-    loading: "Checking...",
-    ready: "Online",
-    unavailable: "Unavailable",
-    unconfigured: "Not configured",
+    loading: "Проверяем…",
+    ready: "Работает",
+    unavailable: "Недоступен",
+    unconfigured: "Не настроен",
   }[status];
 
   return (
@@ -71,7 +71,7 @@ export function MonitoringToolPage({
             {statusLabel}
           </span>
           <a className="button secondary" href={repositoryUrl} rel="noopener noreferrer" target="_blank">
-            GitHub
+            Исходный код
           </a>
           {url ? (
             <a className="button secondary" href={url} rel="noopener noreferrer" target="_blank">

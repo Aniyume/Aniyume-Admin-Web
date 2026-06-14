@@ -37,9 +37,9 @@ export default function DashboardPage() {
     };
   }, []);
 
-  if (loading) return <LoadingState label="Собираем метрики сервиса…" />;
+  if (loading) return <LoadingState label="Собираем сводку по сервису…" />;
   if (error) return <ErrorState message={error} />;
-  if (!dashboard) return <EmptyState title="Dashboard пуст" description="Backend вернул пустой ответ." />;
+  if (!dashboard) return <EmptyState title="Сводка пока пуста" description="Сервер вернул пустой ответ." />;
 
   const summary = dashboard.summary ?? {};
   const statusTotal = (dashboard.anime_by_status ?? []).reduce((sum, item) => sum + item.count, 0) || 1;
@@ -47,33 +47,33 @@ export default function DashboardPage() {
   return (
     <section className="page">
       <PageHeader
-        kicker="Aniyume operations"
-        title="Dashboard"
-        description="Сводка по каталогу, пользователям, импортам и активности. Панель уже построена как production console, а не JSON scaffold."
+        kicker="центр управления Aniyume"
+        title="Главная"
+        description="Важные показатели каталога, пользователей, жалоб и импорта в одном месте."
         actions={
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <BroadcastButton />
             <Gazan67Button />
-            <button className="button secondary" type="button">↻ Обновить</button>
+            <button className="button secondary" onClick={() => window.location.reload()} type="button">↻ Обновить</button>
           </div>
         }
       />
 
       <div className="grid">
-        <StatCard label="Anime total" value={formatNumber(summary.total_anime)} caption="Всего тайтлов в каталоге" />
-        <StatCard label="Episodes" value={formatNumber(summary.total_episodes)} caption="Серии и player sources" />
-        <StatCard label="Users" value={formatNumber(summary.total_users)} caption="Зарегистрированные аккаунты" />
-        <StatCard label="Reports" value={formatNumber(summary.pending_reports)} caption={`${formatNumber(summary.total_reports)} всего жалоб`} />
+        <StatCard label="Аниме" value={formatNumber(summary.total_anime)} caption="Всего тайтлов в каталоге" />
+        <StatCard label="Серии" value={formatNumber(summary.total_episodes)} caption="Серии из всех источников" />
+        <StatCard label="Пользователи" value={formatNumber(summary.total_users)} caption="Зарегистрированные аккаунты" />
+        <StatCard label="Новые жалобы" value={formatNumber(summary.pending_reports)} caption={`${formatNumber(summary.total_reports)} жалоб всего`} />
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "minmax(280px, 1.1fr) minmax(280px, 0.9fr)" }}>
+      <div className="split-layout">
         <Card>
           <div className="toolbar" style={{ marginBottom: 16 }}>
             <div>
-              <p className="kicker">catalog health</p>
-              <h2 style={{ margin: 0 }}>Anime by status</h2>
+              <p className="kicker">состояние каталога</p>
+              <h2 className="section-title">Аниме по статусам</h2>
             </div>
-            <Badge tone="brand">{formatNumber(statusTotal)} titles</Badge>
+            <Badge tone="brand">{formatNumber(statusTotal)} тайтлов</Badge>
           </div>
           <div style={{ display: "grid", gap: 12 }}>
             {(dashboard.anime_by_status ?? []).map((item) => {
@@ -94,8 +94,8 @@ export default function DashboardPage() {
         </Card>
 
         <Card>
-          <p className="kicker">import pulse</p>
-          <h2 style={{ marginTop: 0 }}>Recent imports</h2>
+          <p className="kicker">импорт данных</p>
+          <h2 className="section-title">Последние импорты</h2>
           <div style={{ display: "grid", gap: 12 }}>
             {(dashboard.recent_imports ?? []).slice(0, 5).map((log) => (
               <div className="pill" key={log.id} style={{ justifyContent: "space-between", borderRadius: 16 }}>
@@ -103,7 +103,7 @@ export default function DashboardPage() {
                 <Badge tone={statusTone(log.status)}>{log.status ?? "unknown"}</Badge>
               </div>
             ))}
-            {(dashboard.recent_imports ?? []).length === 0 ? <p className="muted">Импортов пока нет.</p> : null}
+            {(dashboard.recent_imports ?? []).length === 0 ? <p className="muted">Импорт ещё не запускался.</p> : null}
           </div>
         </Card>
       </div>
@@ -111,15 +111,15 @@ export default function DashboardPage() {
       <Card>
         <div className="toolbar" style={{ marginBottom: 16 }}>
           <div>
-            <p className="kicker">latest content</p>
-            <h2 style={{ margin: 0 }}>Последние anime</h2>
+            <p className="kicker">новый контент</p>
+            <h2 className="section-title">Последние аниме</h2>
           </div>
-          <a className="button secondary" href="/anime">Открыть каталог</a>
+          <a className="button secondary" href="/anime">Перейти в каталог</a>
         </div>
         <div className="table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>ID</th><th>Poster</th><th>Title</th><th>Status</th><th>Type</th><th>Rating</th><th>Updated</th></tr>
+              <tr><th>ID</th><th>Постер</th><th>Название</th><th>Статус</th><th>Тип</th><th>Рейтинг</th><th>Обновлено</th></tr>
             </thead>
             <tbody>
               {(dashboard.latest_anime ?? []).map((anime) => (

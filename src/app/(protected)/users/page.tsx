@@ -91,15 +91,15 @@ export default function UsersPage() {
 
   return (
     <section className="page">
-      <PageHeader kicker="identity & moderation" title="Users" description="Пользователи, роли, premium/online flags, баны и активность. Опасные действия проходят через подтверждение/причину." />
+      <PageHeader kicker="пользователи и модерация" title="Пользователи" description="Управление ролями, Premium-статусом, блокировками и активностью." />
       <div className="toolbar" style={{ marginBottom: 16 }}><button className="button" type="button" onClick={grantPremiumByNickname}>Выдать Premium по нику</button></div>
       <Card>
         <form className="filter-row" onSubmit={submit}>
           <input className="input" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} placeholder="ID / name / email" />
-          <select className="select" value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value })}><option value="">Любая роль</option><option value="admin">admin</option><option value="moderator">moderator</option></select>
-          <select className="select" value={filters.banned} onChange={(e) => setFilters({ ...filters, banned: e.target.value })}><option value="">Ban status</option><option value="1">banned</option><option value="0">not banned</option></select>
-          <select className="select" value={filters.premium} onChange={(e) => setFilters({ ...filters, premium: e.target.value })}><option value="">Premium</option><option value="1">premium</option><option value="0">standard</option></select>
-          <select className="select" value={filters.online} onChange={(e) => setFilters({ ...filters, online: e.target.value })}><option value="">Online</option><option value="1">online</option><option value="0">offline</option></select>
+          <select className="select" value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value })}><option value="">Любая роль</option><option value="admin">Администратор</option><option value="moderator">Модератор</option></select>
+          <select className="select" value={filters.banned} onChange={(e) => setFilters({ ...filters, banned: e.target.value })}><option value="">Любая блокировка</option><option value="1">Заблокированные</option><option value="0">Не заблокированные</option></select>
+          <select className="select" value={filters.premium} onChange={(e) => setFilters({ ...filters, premium: e.target.value })}><option value="">Любой тариф</option><option value="1">Premium</option><option value="0">Стандартный</option></select>
+          <select className="select" value={filters.online} onChange={(e) => setFilters({ ...filters, online: e.target.value })}><option value="">Любой статус</option><option value="1">Онлайн</option><option value="0">Офлайн</option></select>
           <button className="button secondary" type="submit">Фильтровать</button>
         </form>
       </Card>

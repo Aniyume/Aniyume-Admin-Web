@@ -10,23 +10,23 @@ type NavItem =
   | { type: "divider"; id: string; label: string };
 
 const navItems: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: "◈" },
-  { href: "/anime", label: "Anime", icon: "▣" },
-  { href: "/episodes", label: "Episodes", icon: "▶" },
-  { href: "/users", label: "Users", icon: "◎" },
-  { href: "/comments", label: "Comments", icon: "✦" },
-  { href: "/reports", label: "Reports", icon: "!" },
-  { href: "/contacts", label: "Contacts", icon: "✉" },
-  { href: "/ratings", label: "Ratings", icon: "★" },
-  { href: "/tags", label: "Tags / Genres", icon: "#" },
-  { href: "/imports", label: "Imports", icon: "⇣" },
-  { href: "/imports/logs", label: "Import logs", icon: "≡" },
-  { href: "/audit-logs", label: "Audit logs", icon: "⌁" },
-  { href: "/settings", label: "Settings", icon: "⚙" },
-  { type: "divider", id: "operations-tools", label: "Operations tools" },
-  { href: "/monitoring/uptime", label: "Uptime Kuma", icon: "◉" },
-  { href: "/monitoring/grafana", label: "Grafana", icon: "◈" },
-  { href: "/monitoring/nocodb", label: "NocoDB", icon: "⊞" },
+  { href: "/dashboard", label: "Главная", icon: "⌂" },
+  { href: "/anime", label: "Аниме", icon: "▣" },
+  { href: "/episodes", label: "Серии", icon: "▶" },
+  { href: "/users", label: "Пользователи", icon: "◎" },
+  { href: "/comments", label: "Комментарии", icon: "✦" },
+  { href: "/reports", label: "Жалобы", icon: "!" },
+  { href: "/contacts", label: "Обращения", icon: "✉" },
+  { href: "/ratings", label: "Оценки", icon: "★" },
+  { href: "/tags", label: "Теги и жанры", icon: "#" },
+  { href: "/imports", label: "Импорт", icon: "⇣" },
+  { href: "/imports/logs", label: "Логи импорта", icon: "≡" },
+  { href: "/audit-logs", label: "Журнал действий", icon: "⌁" },
+  { href: "/settings", label: "Настройки", icon: "⚙" },
+  { type: "divider", id: "operations-tools", label: "Мониторинг" },
+  { href: "/monitoring/uptime", label: "Доступность", icon: "◉" },
+  { href: "/monitoring/grafana", label: "Метрики", icon: "◈" },
+  { href: "/monitoring/nocodb", label: "База данных", icon: "⊞" },
 ];
 
 function displayUserName(user: unknown) {
@@ -54,9 +54,9 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         <section className="card auth-card">
           <div className="card-content state-card">
             <div>
-              <p className="kicker">secure console</p>
+              <p className="kicker">защищённая панель</p>
               <h1 className="page-title" style={{ fontSize: 42 }}>Aniyume Admin</h1>
-              <p className="muted">Проверяем admin-сессию и права доступа…</p>
+              <p className="muted">Проверяем сессию и права доступа…</p>
             </div>
           </div>
         </section>
@@ -70,10 +70,10 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         <Link className="admin-logo" href="/dashboard">
           <span className="admin-logo-mark">A</span>
           <span className="admin-logo-title">Aniyume Admin</span>
-          <span className="muted" style={{ fontSize: 12 }}>Operations · Moderation · Media</span>
+          <span className="muted" style={{ fontSize: 12 }}>Управление · Модерация · Контент</span>
         </Link>
 
-        <nav className="admin-nav" aria-label="Admin navigation">
+        <nav className="admin-nav" aria-label="Навигация администратора">
           {navItems.map((item) => {
             if ("type" in item) {
               return (
@@ -95,7 +95,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         <div className="admin-user-card">
           <div className="pill" style={{ width: "100%" }}>● {displayUserName(user)}</div>
           <p className="muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
-            Token shell временный: Bearer хранится в памяти вкладки; cookie/session auth уже поддерживается через credentials.
+            Вы вошли в защищённую панель управления Aniyume.
           </p>
           <button
             className="button secondary"
@@ -106,7 +106,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             style={{ width: "100%" }}
             type="button"
           >
-            Выйти локально
+            Выйти
           </button>
         </div>
       </aside>
@@ -115,7 +115,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         <header className="admin-topbar">
           <div className="search-shell">
             <span className="search-icon">⌕</span>
-            <input className="input" placeholder="Быстрый поиск: anime, user, comment, report…" />
+            <input className="input" placeholder="Быстрый поиск по панели…" />
           </div>
           <div className="topbar-actions">
             <span className="pill">0 уведомлений</span>

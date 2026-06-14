@@ -42,7 +42,7 @@ export default function ReportsPage() {
   useEffect(load, [applied, page]);
   function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setPage(1); setApplied(filters); }
   async function setStatus(report: AdminReport, status: string) {
-    const note = ["resolved", "rejected"].includes(status) ? await ui.prompt({ title: "Resolution note", defaultValue: report.resolution_note ?? "", confirmLabel: status }) ?? undefined : undefined;
+    const note = ["resolved", "rejected"].includes(status) ? await ui.prompt({ title: "Комментарий к решению", defaultValue: report.resolution_note ?? "", confirmLabel: "Сохранить" }) ?? undefined : undefined;
     const result = await updateAdminReportStatus(report.id, status, note);
     if (result.ok) { const title = `Report #${report.id}: ${status}`; setNotice(title); ui.toast({ tone: "success", title }); load(); } else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); }
   }
@@ -52,7 +52,7 @@ export default function ReportsPage() {
     if (result.ok) { setNotice("Report deleted"); ui.toast({ tone: "success", title: "Report deleted" }); load(); } else { setError(result.message); ui.toast({ tone: "error", title: "Ошибка", message: result.message }); }
   }
 
-  return <section className="page"><PageHeader kicker="trust & safety" title="Reports" description="Система жалоб: очередь pending/reviewed/resolved/rejected, target preview, reporter/admin и audit trail для решений." />
+  return <section className="page"><PageHeader kicker="безопасность сообщества" title="Жалобы" description="Очередь пользовательских жалоб и инструменты для принятия решений." />
     <Card><form className="filter-row" onSubmit={submit}><select className="select" value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}><option value="">Все статусы</option><option value="pending">pending</option><option value="reviewed">reviewed</option><option value="resolved">resolved</option><option value="rejected">rejected</option></select><input className="input" value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })} placeholder="category: spam/toxic/abuse" /><input className="input" value={filters.target_type} onChange={(e) => setFilters({ ...filters, target_type: e.target.value })} placeholder="target_type model class" /><button className="button secondary" type="submit">Фильтровать</button></form></Card>
     {notice ? <div className="pill" style={{ borderColor: "rgba(52,211,153,.35)", color: "var(--success)" }}>{notice}</div> : null}
     {loading ? <LoadingState label="Загружаем reports queue…" /> : null}{error ? <ErrorState message={error} /> : null}{!loading && !error && items.length === 0 ? <EmptyState title="Жалоб не найдено" description="Когда появятся жалобы пользователей, они будут отображаться здесь." /> : null}

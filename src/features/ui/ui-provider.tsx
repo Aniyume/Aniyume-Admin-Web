@@ -56,7 +56,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
       {dialog ? (
         <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeDialog(null); }}>
           <div className="dialog-panel" role="dialog" aria-modal="true">
-            <p className="kicker">admin action</p>
+            <p className="kicker">действие администратора</p>
             <h2 style={{ margin: 0 }}>{dialog.title}</h2>
             {dialog.message ? <p className="muted" style={{ lineHeight: 1.6 }}>{dialog.message}</p> : null}
             {dialog.type === "prompt" ? (
