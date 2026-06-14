@@ -47,12 +47,10 @@ npm run build
 
 ## Operations Tools
 
-The protected admin area links Uptime Kuma, Grafana, NocoDB, and Understand Anything.
+The protected admin area links Uptime Kuma, Grafana, and NocoDB.
 
 - `NEXT_PUBLIC_*_URL` is the address opened by an administrator's browser.
 - `*_INTERNAL_URL` is configured in the Laravel backend and used for health checks.
 - `NEXT_PUBLIC_*_EMBED=true` enables an iframe only after the service itself is configured to allow embedding.
 
 Embedding is disabled by default. Grafana additionally requires `allow_embedding` when an iframe is enabled.
-
-Understand Anything is different from the other tools: it is installed into an AI coding client, analyzes a repository, and then starts a dashboard. Configure its public and internal dashboard URLs only after that dashboard is running.

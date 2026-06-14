@@ -340,7 +340,7 @@ function toQueryString(params?: Record<string, string | number | boolean | undef
 
 export const getAdminMe = () => requestAdmin<unknown>("/api/v1/admin/auth/me");
 export const getAdminDashboard = () => requestAdmin<ApiDataResponse<AdminDashboard>>("/api/v1/admin/dashboard");
-export const getAdminMonitoringHealth = (target: "uptime" | "grafana" | "nocodb" | "understand-anything") =>
+export const getAdminMonitoringHealth = (target: "uptime" | "grafana" | "nocodb") =>
   requestAdmin<ApiDataResponse<AdminMonitoringHealth>>(`/api/v1/admin/monitoring/health${toQueryString({ target })}`);
 export const getAdminAnime = (params?: Record<string, string | number | boolean | undefined | null>) =>
   requestAdmin<PaginatedResponse<AdminAnime>>(`/api/v1/admin/anime${toQueryString(params)}`);

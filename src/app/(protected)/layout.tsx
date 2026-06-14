@@ -27,7 +27,6 @@ const navItems: NavItem[] = [
   { href: "/monitoring/uptime", label: "Uptime Kuma", icon: "◉" },
   { href: "/monitoring/grafana", label: "Grafana", icon: "◈" },
   { href: "/monitoring/nocodb", label: "NocoDB", icon: "⊞" },
-  { href: "/monitoring/understand-anything", label: "Understand Anything", icon: "◇" },
 ];
 
 function displayUserName(user: unknown) {

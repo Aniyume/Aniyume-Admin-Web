@@ -10,7 +10,7 @@ type MonitoringToolPageProps = {
   embed?: boolean;
   name: string;
   repositoryUrl: string;
-  target: "uptime" | "grafana" | "nocodb" | "understand-anything";
+  target: "uptime" | "grafana" | "nocodb";
   url: string;
   sandbox?: string;
 };
