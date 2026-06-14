@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Badge, Card, EmptyState, ErrorState, LoadingState, PageHeader, StatCard, formatDate, formatNumber } from "@/components/ui";
 import { AdminDashboard, getAdminDashboard } from "@/lib/admin-api";
 import { BroadcastButton } from "@/components/BroadcastButton";
+import { Gazan67Button } from "@/components/Gazan67Button";
 
 function statusTone(status?: string | null) {
   if (status === "completed" || status === "success") return "success" as const;
@@ -52,6 +53,7 @@ export default function DashboardPage() {
         actions={
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <BroadcastButton />
+            <Gazan67Button />
             <button className="button secondary" type="button">↻ Обновить</button>
           </div>
         }
