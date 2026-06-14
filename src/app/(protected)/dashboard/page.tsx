@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Badge, Card, EmptyState, ErrorState, LoadingState, PageHeader, StatCard, formatDate, formatNumber } from "@/components/ui";
 import { AdminDashboard, getAdminDashboard } from "@/lib/admin-api";
+import { BroadcastButton } from "@/components/BroadcastButton";
 
 function statusTone(status?: string | null) {
   if (status === "completed" || status === "success") return "success" as const;
@@ -48,7 +49,12 @@ export default function DashboardPage() {
         kicker="Aniyume operations"
         title="Dashboard"
         description="Сводка по каталогу, пользователям, импортам и активности. Панель уже построена как production console, а не JSON scaffold."
-        actions={<button className="button secondary" type="button">↻ Обновить</button>}
+        actions={
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <BroadcastButton />
+            <button className="button secondary" type="button">↻ Обновить</button>
+          </div>
+        }
       />
 
       <div className="grid">

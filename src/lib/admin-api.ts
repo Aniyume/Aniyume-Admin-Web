@@ -339,6 +339,12 @@ function toQueryString(params?: Record<string, string | number | boolean | undef
 }
 
 export const getAdminMe = () => requestAdmin<unknown>("/api/v1/admin/auth/me");
+export const toggleGlobalBroadcast = (active: boolean) =>
+  requestAdmin<ApiDataResponse<{ active: boolean }>>("/api/v1/admin/broadcast/toggle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ active }),
+  });
 export const getAdminDashboard = () => requestAdmin<ApiDataResponse<AdminDashboard>>("/api/v1/admin/dashboard");
 export const getAdminMonitoringHealth = (target: "uptime" | "grafana" | "nocodb") =>
   requestAdmin<ApiDataResponse<AdminMonitoringHealth>>(`/api/v1/admin/monitoring/health${toQueryString({ target })}`);
