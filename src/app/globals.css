@@ -291,6 +291,25 @@ pre {
   border-color: var(--border-strong);
 }
 
+.admin-nav-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 4px 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.admin-nav-section::after {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
+  content: "";
+}
+
 .admin-nav-icon {
   width: 22px;
   text-align: center;

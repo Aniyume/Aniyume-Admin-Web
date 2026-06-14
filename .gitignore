@@ -6,6 +6,8 @@ dist
 # env files — ignore all real env, allow example
 .env*
 !.env.example
+!.env.monitoring.example
+!.env.monitoring.local.example
 *.env.backup*
 *.backup.env*
 

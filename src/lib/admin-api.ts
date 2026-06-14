@@ -274,6 +274,13 @@ export type AdminPlayerDiagnostics = {
   providers: Array<{ source: string; name: string; enabled: boolean; has_template: boolean; translator: string; preview_url?: string | null; valid_preview: boolean }>;
 };
 
+export type AdminMonitoringHealth = {
+  configured: boolean;
+  ok: boolean;
+  status: number | null;
+  message?: string;
+};
+
 export function setAdminToken(token: string) {
   adminToken = token;
 }
@@ -333,6 +340,8 @@ function toQueryString(params?: Record<string, string | number | boolean | undef
 
 export const getAdminMe = () => requestAdmin<unknown>("/api/v1/admin/auth/me");
 export const getAdminDashboard = () => requestAdmin<ApiDataResponse<AdminDashboard>>("/api/v1/admin/dashboard");
+export const getAdminMonitoringHealth = (target: "uptime" | "grafana" | "nocodb" | "understand-anything") =>
+  requestAdmin<ApiDataResponse<AdminMonitoringHealth>>(`/api/v1/admin/monitoring/health${toQueryString({ target })}`);
 export const getAdminAnime = (params?: Record<string, string | number | boolean | undefined | null>) =>
   requestAdmin<PaginatedResponse<AdminAnime>>(`/api/v1/admin/anime${toQueryString(params)}`);
 export const getAdminAnimeDetail = (animeId: number | string) =>

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_ORIGIN = process.env.ADMIN_BACKEND_ORIGIN ?? process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL ?? "http://localhost:8088";
+const BACKEND_ORIGIN =
+  process.env.ADMIN_BACKEND_ORIGIN ??
+  process.env.ADMIN_BACKEND_URL ??
+  process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL ??
+  "http://localhost:8088";
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const { path } = await context.params;

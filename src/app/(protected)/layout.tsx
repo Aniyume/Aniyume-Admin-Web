@@ -5,7 +5,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/features/auth/auth-provider";
 
-const navItems = [
+type NavItem =
+  | { href: string; label: string; icon: string }
+  | { type: "divider"; id: string; label: string };
+
+const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "◈" },
   { href: "/anime", label: "Anime", icon: "▣" },
   { href: "/episodes", label: "Episodes", icon: "▶" },
@@ -19,6 +23,11 @@ const navItems = [
   { href: "/imports/logs", label: "Import logs", icon: "≡" },
   { href: "/audit-logs", label: "Audit logs", icon: "⌁" },
   { href: "/settings", label: "Settings", icon: "⚙" },
+  { type: "divider", id: "operations-tools", label: "Operations tools" },
+  { href: "/monitoring/uptime", label: "Uptime Kuma", icon: "◉" },
+  { href: "/monitoring/grafana", label: "Grafana", icon: "◈" },
+  { href: "/monitoring/nocodb", label: "NocoDB", icon: "⊞" },
+  { href: "/monitoring/understand-anything", label: "Understand Anything", icon: "◇" },
 ];
 
 function displayUserName(user: unknown) {
@@ -67,6 +76,13 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
         <nav className="admin-nav" aria-label="Admin navigation">
           {navItems.map((item) => {
+            if ("type" in item) {
+              return (
+                <div key={item.id} className="admin-nav-section">
+                  <span>{item.label}</span>
+                </div>
+              );
+            }
             const isActive = currentPath === item.href || (item.href !== "/dashboard" && currentPath.startsWith(`${item.href}/`));
             return (
               <Link className={`admin-nav-item ${isActive ? "active" : ""}`} href={item.href} key={item.href}>
